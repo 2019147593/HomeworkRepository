@@ -4,6 +4,29 @@
     <head>
         <meta charset="utf-8">
         <title>성현준의 영화취향</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            img {
+                max-width: 200px;
+                max-height: 300px;
+                display: block;
+                margin: 0 auto;
+            }
+        </style>
     </head>
     <body>
         <h1>안녕하세요, 성현준입니다.</h1>
@@ -28,40 +51,75 @@
                 <th>포스터</th>
                 <th>명대사</th>
             </tr>
-            <tr>
-                <td>1</td>
-                <td>The Dark Knight</td>
-                <td>
-                    <img src="./images/dark_knight.jpg" 
-                         alt="The Dark Knight Poster" 
-                         width="200" 
-                         height="300">
-                </td>
-                <td>"Why so serious?"</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>Inception</td>
-                <td>
-                    <img src="./images/inception.jpg" 
-                         alt="Inception Movie Poster" 
-                         width="200" 
-                         height="300">
-                </td>
-                <td>"Dreams feel real while we're in them."</td>
-            </tr>
-            <tr>
-                <td>3</td>
-                <td>Interstellar</td>
-                <td>
-                    <img src="./images/interstellar.jpg" 
-                         alt="Interstellar Movie Poster" 
-                         width="200" 
-                         height="300">
-                </td>
-                <td>"Do not go gentle into that good night."</td>
-            </tr>
+            <tbody id="movie-table-body">
+                <!-- Rows will be inserted here -->
+            </tbody>
         </table>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const movieTableBody = document.getElementById('movie-table-body');
+                if (!movieTableBody) {
+                    console.error('Element with ID "movie-table-body" not found.');
+                    return;
+                }
+    
+                Papa.parse('movies_metadata.csv', {
+                    download: true,
+                    header: true,
+                    complete: function(results) {
+    
+                        const titleIndex = results.meta.fields.indexOf('title');
+                        const taglineIndex = results.meta.fields.indexOf('tagline');
+                        const posterPathIndex = results.meta.fields.indexOf('poster_path');
+                        const requiredRows = [21131, 587, 898];
+    
+                        requiredRows.forEach((rowNumber, index) => {
+                            const row = results.data[rowNumber - 1];
+                            if (row) {
+                                const title = row[results.meta.fields[titleIndex]] || 'N/A';
+                                const tagline = row[results.meta.fields[taglineIndex]] || 'N/A';
+                                const posterPath = row[results.meta.fields[posterPathIndex]] || '';
+    
+                                const tableRow = document.createElement('tr');
+    
+                                const rankCell = document.createElement('td');
+                                rankCell.textContent = index + 1;
+                                tableRow.appendChild(rankCell);
+    
+                                const titleCell = document.createElement('td');
+                                titleCell.textContent = title;
+                                tableRow.appendChild(titleCell);
+    
+                                const posterCell = document.createElement('td');
+                                if (posterPath) {
+                                    const img = document.createElement('img');
+                                    img.src = `${posterPath}`; // Adjust the URL as needed
+                                    img.alt = `${title} Poster`;
+                                    img.width = 200;
+                                    img.height = 300;
+                                    posterCell.appendChild(img);
+                                } else {
+                                    posterCell.textContent = 'No Poster Available';
+                                }
+                                tableRow.appendChild(posterCell);
+    
+                                const taglineCell = document.createElement('td');
+                                taglineCell.textContent = tagline;
+                                tableRow.appendChild(taglineCell);
+    
+                                movieTableBody.appendChild(tableRow);
+                            }
+                        });
+                    },
+                    error: function(error) {
+                        console.error('Error parsing the CSV file:', error);
+                        movieTableBody.innerHTML = '<tr><td colspan="4">Error loading data: ' + error.message + '</td></tr>';
+                    }
+                });
+            });
+        </script>
     
     </body>
     </html>
