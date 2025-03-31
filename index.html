@@ -52,7 +52,6 @@
                 <th>명대사</th>
             </tr>
             <tbody id="movie-table-body">
-                <!-- Rows will be inserted here -->
             </tbody>
         </table>
     
@@ -72,15 +71,15 @@
     
                         const titleIndex = results.meta.fields.indexOf('title');
                         const taglineIndex = results.meta.fields.indexOf('tagline');
-                        const posterPathIndex = results.meta.fields.indexOf('poster_path');
                         const requiredRows = [21131, 587, 898];
+                        const imageFiles = ['worldwarz.png', 'silenceofthelambs.png', '2001.png'];
     
                         requiredRows.forEach((rowNumber, index) => {
                             const row = results.data[rowNumber - 1];
                             if (row) {
                                 const title = row[results.meta.fields[titleIndex]] || 'N/A';
                                 const tagline = row[results.meta.fields[taglineIndex]] || 'N/A';
-                                const posterPath = row[results.meta.fields[posterPathIndex]] || '';
+                                const imageFile = imageFiles[index];
     
                                 const tableRow = document.createElement('tr');
     
@@ -93,16 +92,12 @@
                                 tableRow.appendChild(titleCell);
     
                                 const posterCell = document.createElement('td');
-                                if (posterPath) {
-                                    const img = document.createElement('img');
-                                    img.src = `${posterPath}`; // Adjust the URL as needed
-                                    img.alt = `${title} Poster`;
-                                    img.width = 200;
-                                    img.height = 300;
-                                    posterCell.appendChild(img);
-                                } else {
-                                    posterCell.textContent = 'No Poster Available';
-                                }
+                                const img = document.createElement('img');
+                                img.src = imageFile;
+                                img.alt = `${title} Poster`;
+                                img.width = 200;
+                                img.height = 300;
+                                posterCell.appendChild(img);
                                 tableRow.appendChild(posterCell);
     
                                 const taglineCell = document.createElement('td');
