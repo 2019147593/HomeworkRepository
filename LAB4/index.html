@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인프밍 영화 정보 사이트입니다.</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>인프밍 영화 정보 사이트입니다.</h1>
+            <nav>
+                <a href="index.html">메인페이지</a>
+                <a href="login.html">로그인</a>
+                <a href="signup.html">회원가입</a>
+            </nav>
+        </header>
+
+        <hr class="header-divider">
+
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="키워드를 입력하세요">
+            <button id="filterBtn">Filter results</button>
+        </div>
+
+        <h2>Movies</h2>
+        <div class="main-content">
+            <aside class="filter-section">
+                <h3>정렬 기준</h3>
+                <form id="sortForm">
+                    <div><input type="radio" name="sort" value="평점_내림차순" id="rating_desc"><label for="rating_desc">평점 내림차순</label></div>
+                    <div><input type="radio" name="sort" value="평점_오름차순" id="rating_asc"><label for="rating_asc">평점 오름차순</label></div>
+                    <div><input type="radio" name="sort" value="개봉_내림차순" id="date_desc"><label for="date_desc">개봉 내림차순</label></div>
+                    <div><input type="radio" name="sort" value="개봉_오름차순" id="date_asc"><label for="date_asc">개봉 오름차순</label></div>
+                </form>
+            </aside>
+            <section class="movies-section">
+                <div id="movieContainer" class="movie-grid"></div>
+            </section>
+        </div>
+
+    </div>
+
+    <script>
+        let allMovies = [];
+        let filteredMovies = [];
+        let currentIndex = 0;
+        const moviesPerLoad = 6;
+        let isLoading = false;
+
+        async function fetchMovies() {
+            try {
+                const response = await fetch('product.json');
+                allMovies = await response.json();
+                filteredMovies = [...allMovies];
+                currentIndex = 0;
+                renderMovies(true);
+            } catch (error) {
+                console.error('Error loading movies:', error);
+            }
+        }
+
+        function renderMovies(reset = false) {
+            const container = document.getElementById('movieContainer');
+            if (reset) container.innerHTML = '';
+            const endIndex = Math.min(currentIndex + moviesPerLoad, filteredMovies.length);
+
+            for (let i = currentIndex; i < endIndex; i++) {
+                const movie = filteredMovies[i];
+                const movieElement = createMovieElement(movie);
+                container.appendChild(movieElement);
+            }
+            currentIndex = endIndex;
+        }
+
+        function createMovieElement(movie) {
+            const div = document.createElement('div');
+            div.className = 'movie-card';
+
+            div.innerHTML = `
+                <div class="overview-overlay">
+                    <p>${movie.overview}</p>
+                </div>
+                <img src="${movie.poster_path}" alt="${movie.title}">
+                <div class="movie-info">
+                    <h3>${movie.title}</h3>
+                    <p>Release Date: ${movie.release_date}</p>
+                    <p>Rating: ${movie.vote_average}</p>
+                </div>
+            `;
+            return div;
+        }
+
+
+        window.addEventListener('scroll', () => {
+            if (isLoading) return;
+            if (currentIndex >= filteredMovies.length) return;
+            if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
+                isLoading = true;
+                setTimeout(() => {
+                    renderMovies();
+                    isLoading = false;
+                }, 200);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('searchInput').addEventListener('input', filterMovies);
+            document.getElementById('sortForm').addEventListener('change', sortMovies);
+            fetchMovies();
+        });
+
+        function filterMovies() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            filteredMovies = allMovies.filter(movie => 
+                movie.title.toLowerCase().includes(searchTerm) ||
+                movie.overview.toLowerCase().includes(searchTerm)
+            );
+            currentIndex = 0;
+            renderMovies(true);
+        }
+
+        function sortMovies(e) {
+            const sortType = e.target.value;
+            switch(sortType) {
+                case '평점_내림차순':
+                    filteredMovies.sort((a, b) => b.vote_average - a.vote_average);
+                    break;
+                case '평점_오름차순':
+                    filteredMovies.sort((a, b) => a.vote_average - b.vote_average);
+                    break;
+                case '개봉_내림차순':
+                    filteredMovies.sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
+                    break;
+                case '개봉_오름차순':
+                    filteredMovies.sort((a, b) => new Date(a.release_date) - new Date(b.release_date));
+                    break;
+            }
+            currentIndex = 0;
+            renderMovies(true);
+        }
+    </script>
+
+</body>
+</html>
